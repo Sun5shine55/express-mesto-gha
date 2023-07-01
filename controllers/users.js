@@ -6,16 +6,15 @@ const NOTFOUNDERROR_CODE = 404;
 const getUsers = (req, res) => User.find({}).then((users) => res.send(users));
 
 const getUserById = (req, res, next) => {
-  const { id } = req.params;
-
-  return User.findById(id)
+  console.log(req.params.userId);
+  User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
         return res
-          .status(NOTFOUNDERROR_CODE)
+          .status(400)
           .send({ message: "Пользователь по указанному _id не найден" });
       }
-      return res.send(user);
+      return res.status(200).send(user);
     })
     .catch(next);
 };
@@ -45,7 +44,7 @@ const updateUserData = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return res
-          .status(NOTFOUNDERROR_CODE)
+          .status(400)
           .send({ message: "Пользователь по указанному _id не найден" });
       }
       return res.send(user);
