@@ -8,7 +8,6 @@ const getCards = (req, res) =>
 const deleteCard = (req, res) => {
   const owner = req.user._id;
   const _id = req.params.cardId;
-  console.log(_id);
   Card.findOne({ owner }).then((card) => {
     if (ObjectId.isValid(_id)) {
       if (!card) {
@@ -50,12 +49,18 @@ const putLike = (req, res, next) => {
     { new: true }
   )
     .then((card) => {
-      if (!card) {
+      if (ObjectId.isValid(_id)) {
+        if (!card) {
+          return res
+            .status(NOTFOUNDERROR_CODE)
+            .send({ message: "Передан несуществующий _id карточки." });
+        }
+      } else {
         return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: "Передан несуществующий _id карточки." });
+          .status(400)
+          .send({ message: "Передан некорректный _id карточки." });
       }
-      return res.send(card);
+      return res.status(200).send(card);
     })
     .catch(next);
 };
@@ -67,12 +72,18 @@ const deleteLike = (req, res, next) => {
     { new: true }
   )
     .then((card) => {
-      if (!card) {
+      if (ObjectId.isValid(_id)) {
+        if (!card) {
+          return res
+            .status(NOTFOUNDERROR_CODE)
+            .send({ message: "Передан несуществующий _id карточки." });
+        }
+      } else {
         return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: "Передан несуществующий _id карточки." });
+          .status(400)
+          .send({ message: "Передан некорректный _id карточки." });
       }
-      return res.send(card);
+      return res.status(200).send(card);
     })
     .catch(next);
 };

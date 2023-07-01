@@ -9,10 +9,16 @@ const getUserById = (req, res, next) => {
   console.log(req.params.userId);
   User.findById(req.params.userId)
     .then((user) => {
-      if (!user) {
+      if (ObjectId.isValid(_id)) {
+        if (!user) {
+          return res
+            .status(404)
+            .send({ message: "Пользователь по указанному _id не найден" });
+        }
+      } else {
         return res
           .status(400)
-          .send({ message: "Пользователь по указанному _id не найден" });
+          .send({ message: "Передан некорректный _id карточки." });
       }
       return res.status(200).send(user);
     })
