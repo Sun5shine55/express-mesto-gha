@@ -41,31 +41,21 @@ const createUser = (req, res, next) => {
 
 const updateUserData = (req, res, next) => {
   const { name, about } = req.body;
-  if (
-    req.body.name.length > 1 &&
-    req.body.name.length < 31 &&
-    req.body.about.length > 1 &&
-    req.body.about.length < 31
-  ) {
-    User.findByIdAndUpdate(
-      req.user._id,
-      { name, about },
-      { new: true, runValidators: true }
-    )
-      .then((user) => {
-        if (!user) {
-          return res
-            .status(NOTFOUNDERROR_CODE)
-            .send({ message: "Пользователь по указанному _id не найден" });
-        }
-        return res.send(user);
-      })
-      .catch(next);
-  } else {
-    return res
-      .status(VALIDATION_CODE)
-      .send({ message: "Недопустимая длина вводимых  данных." });
-  }
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, about },
+    { new: true, runValidators: true }
+  )
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(NOTFOUNDERROR_CODE)
+          .send({ message: "Пользователь по указанному _id не найден" });
+      }
+      return res.send(user);
+    })
+    .catch(next);
 };
 
 const updateUserAvatar = (req, res, next) => {
