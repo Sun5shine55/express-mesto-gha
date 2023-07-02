@@ -1,28 +1,27 @@
 const User = require("../models/user");
-
+const { ObjectId } = require("mongodb");
 const VALIDATION_CODE = 400;
 const NOTFOUNDERROR_CODE = 404;
 
 const getUsers = (req, res) => User.find({}).then((users) => res.send(users));
 
 const getUserById = (req, res, next) => {
-  console.log(req.params.userId);
-  User.findById(req.params.userId)
-    .then((user) => {
-      if (ObjectId.isValid(_id)) {
+  if (ObjectId.isValid(req.params.userId)) {
+    User.findOne({ _id: new ObjectId(req.params.userId) })
+      .then((user) => {
         if (!user) {
           return res
-            .status(404)
+            .status(NOTFOUNDERROR_CODE)
             .send({ message: "Пользователь по указанному _id не найден" });
         }
-      } else {
-        return res
-          .status(400)
-          .send({ message: "Передан некорректный _id карточки." });
-      }
-      return res.status(200).send(user);
-    })
-    .catch(next);
+        return res.status(200).send(user);
+      })
+      .catch(next);
+  } else {
+    return res
+      .status(VALIDATION_CODE)
+      .send({ message: "Передан некорректный _id пользователя." });
+  }
 };
 
 const createUser = (req, res, next) => {
@@ -42,20 +41,31 @@ const createUser = (req, res, next) => {
 
 const updateUserData = (req, res, next) => {
   const { name, about } = req.body;
-  return User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    { runValidators: true }
-  )
-    .then((user) => {
-      if (!user) {
-        return res
-          .status(400)
-          .send({ message: "Пользователь по указанному _id не найден" });
-      }
-      return res.send(user);
-    })
-    .catch(next);
+  if (
+    req.body.name.length > 2 &&
+    req.body.name.length < 30 &&
+    req.body.about.length > 2 &&
+    req.body.about.length < 30
+  ) {
+    User.findByIdAndUpdate(
+      req.user._id,
+      { name, about },
+      { new: true, runValidators: true }
+    )
+      .then((user) => {
+        if (!user) {
+          return res
+            .status(NOTFOUNDERROR_CODE)
+            .send({ message: "Пользователь по указанному _id не найден" });
+        }
+        return res.send(user);
+      })
+      .catch(next);
+  } else {
+    return res
+      .status(VALIDATION_CODE)
+      .send({ message: "Недопустимая длина вводимых  данных." });
+  }
 };
 
 const updateUserAvatar = (req, res, next) => {
@@ -63,7 +73,7 @@ const updateUserAvatar = (req, res, next) => {
   return User.findByIdAndUpdate(
     req.user._id,
     { avatar },
-    { runValidators: true }
+    { new: true, runValidators: true }
   )
     .then((user) => {
       if (!user) {

@@ -1,5 +1,5 @@
 const Card = require("../models/card");
-const ObjectId = require("mongoose").Types.ObjectId;
+const { ObjectId } = require("mongodb");
 const { VALIDATION_CODE, NOTFOUNDERROR_CODE } = require("./users");
 
 const getCards = (req, res) =>
@@ -43,49 +43,49 @@ const createCard = (req, res, next) => {
 };
 
 const putLike = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true }
-  )
-    .then((card) => {
-      if (ObjectId.isValid(_id)) {
+  if (ObjectId.isValid(req.params.cardId)) {
+    Card.findByIdAndUpdate(
+      req.params.cardId,
+      { $addToSet: { likes: req.user._id } },
+      { new: true }
+    )
+      .then((card) => {
         if (!card) {
           return res
             .status(NOTFOUNDERROR_CODE)
             .send({ message: "Передан несуществующий _id карточки." });
         }
-      } else {
-        return res
-          .status(400)
-          .send({ message: "Передан некорректный _id карточки." });
-      }
-      return res.status(200).send(card);
-    })
-    .catch(next);
+        return res.status(200).send(card);
+      })
+      .catch(next);
+  } else {
+    return res
+      .status(400)
+      .send({ message: "Передан некорректный _id карточки." });
+  }
 };
 
 const deleteLike = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true }
-  )
-    .then((card) => {
-      if (ObjectId.isValid(_id)) {
+  if (ObjectId.isValid(req.params.cardId)) {
+    Card.findByIdAndUpdate(
+      req.params.cardId,
+      { $pull: { likes: req.user._id } },
+      { new: true }
+    )
+      .then((card) => {
         if (!card) {
           return res
             .status(NOTFOUNDERROR_CODE)
             .send({ message: "Передан несуществующий _id карточки." });
         }
-      } else {
-        return res
-          .status(400)
-          .send({ message: "Передан некорректный _id карточки." });
-      }
-      return res.status(200).send(card);
-    })
-    .catch(next);
+        return res.status(200).send(card);
+      })
+      .catch(next);
+  } else {
+    return res
+      .status(VALIDATION_CODE)
+      .send({ message: "Передан некорректный _id карточки." });
+  }
 };
 
 module.exports = {

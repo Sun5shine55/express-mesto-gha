@@ -26,6 +26,10 @@ app.use((req, res, next) => {
 app.use(userRoutes);
 app.use(cardRoutes);
 
+app.all("*", function (req, res) {
+  res.status(404).send({ message: "указан неправильный  путь" });
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on port ${PORT}`);
 });
