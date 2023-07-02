@@ -42,10 +42,10 @@ const createUser = (req, res, next) => {
 const updateUserData = (req, res, next) => {
   const { name, about } = req.body;
   if (
-    req.body.name.length > 2 &&
-    req.body.name.length < 30 &&
-    req.body.about.length > 2 &&
-    req.body.about.length < 30
+    req.body.name.length > 1 &&
+    req.body.name.length < 31 &&
+    req.body.about.length > 1 &&
+    req.body.about.length < 31
   ) {
     User.findByIdAndUpdate(
       req.user._id,
