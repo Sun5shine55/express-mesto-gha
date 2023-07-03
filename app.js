@@ -25,6 +25,11 @@ app.use((req, res, next) => {
 
 app.use(userRoutes);
 app.use(cardRoutes);
+app.use((error, req, res, next) => {
+  res.status(400);
+  console.log("Message: ", error.message);
+  res.send({ message: "Длина" });
+});
 
 app.all("*", function (req, res) {
   res.status(404).send({ message: "указан неправильный  путь" });
