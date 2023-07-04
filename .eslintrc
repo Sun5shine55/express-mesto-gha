@@ -1,7 +1,24 @@
 {
-  "extends": ["airbnb-base","eslint:recommended"],
-  "quotes": [1, "single", { "avoidEscape": true }],
+  "extends": "airbnb-base",
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
   "rules": {
-    "no-underscore-dangle": ["error",{"allow":["_id"]}]
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_id"
+        ]
+      }
+    ],
+    "linebreak-style": 0,
+    "eslint-linebreak-style": [
+      0,
+      "error",
+      "windows"
+    ],
+    "global-require": 0,
+    "no-console": "warn"
   }
 }

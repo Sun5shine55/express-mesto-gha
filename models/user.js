@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
+const mongoose = require('mongoose');
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,12 +19,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       validate: {
         validator: (v) => validator.isURL(v),
-        message: "Некорректный URL",
+        message: 'Некорректный URL',
       },
       required: [true, 'Поле "avatar" должно быть заполнено'],
     },
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model('user', userSchema);
