@@ -57,7 +57,14 @@ const updateUserData = (req, res, next) => {
       }
       return res.send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(VALIDATION_CODE).send({
+          message: err.message,
+        });
+      }
+      return next(err);
+    });
 };
 
 const updateUserAvatar = (req, res, next) => {
@@ -75,7 +82,14 @@ const updateUserAvatar = (req, res, next) => {
       }
       return res.status(200).send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(VALIDATION_CODE).send({
+          message: err.message,
+        });
+      }
+      return next(err);
+    });
 };
 
 module.exports = {
