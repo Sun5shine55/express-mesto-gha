@@ -3,10 +3,8 @@ const Card = require('../models/card');
 const { VALIDATION_CODE, NOTFOUNDERROR_CODE } = require('../errors/errors');
 
 const getCards = (req, res) => Card.find({})
-  .then((cards) => {
-    if (!cards) { return res.status(NOTFOUNDERROR_CODE).send({ message: 'У пользователя нет карточек' }); }
-    return res.status(200).send(cards);
-  });
+  .then((cards) => res.status(200).send(cards))
+  .catch((err) => res.status(err.status).send({ message: err.message }));
 
 const deleteCard = (req, res) => {
   const _id = req.params.cardId;
@@ -18,7 +16,8 @@ const deleteCard = (req, res) => {
           .send({ message: 'Передан несуществующий _id карточки.' });
       }
       return Card.deleteOne(card).then(() => res.status(200).send({ message: 'Карточка удалена' }));
-    });
+    })
+      .catch((err) => res.status(err.status).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });
@@ -52,7 +51,8 @@ const putLike = (req, res) => {
           .send({ message: 'Передан несуществующий _id карточки.' });
       }
       return res.status(200).send(card);
-    });
+    })
+      .catch((err) => res.status(err.status).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });
@@ -69,12 +69,12 @@ const deleteLike = (req, res) => {
         return (
           res
             .status(NOTFOUNDERROR_CODE)
-            // eslint-disable-next-line quotes
             .send({ message: 'Передан несуществующий _id карточки.' })
         );
       }
       return res.status(200).send(card);
-    });
+    })
+      .catch((err) => res.status(err.status).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });

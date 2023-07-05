@@ -25,10 +25,6 @@ app.use((req, res, next) => {
 
 app.use(userRoutes);
 app.use(cardRoutes);
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).send({ message: err.message });
-  next(err);
-});
 
 app.all('*', (req, res) => {
   res.status(NOTFOUNDERROR_CODE).send({ message: 'указан неправильный путь' });

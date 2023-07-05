@@ -10,7 +10,8 @@ const getUsers = (req, res) => User.find({})
         .send({ message: 'Зарегистрированных пользователей нет' });
     }
     return res.status(200).send(users);
-  });
+  })
+  .catch((err) => res.status(err.status).send({ message: err.message }));
 
 const getUserById = (req, res) => {
   if (ObjectId.isValid(req.params.userId)) {
@@ -21,13 +22,14 @@ const getUserById = (req, res) => {
           .send({ message: 'Пользователь по указанному _id не найден' });
       }
       return res.status(200).send(user);
-    });
+    })
+      .catch((err) => res.status(err.status).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id пользователя.' });
 };
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   return User.create({ name, about, avatar })
     .then((newUser) => res.status(201).send(newUser))
@@ -37,11 +39,11 @@ const createUser = (req, res, next) => {
           message: 'Переданы некорректные данные при создании пользователя',
         });
       }
-      return next(err);
+      return res.status(err.status).send({ message: err.message });
     });
 };
 
-const updateUserData = (req, res, next) => {
+const updateUserData = (req, res) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(
@@ -63,11 +65,11 @@ const updateUserData = (req, res, next) => {
           message: err.message,
         });
       }
-      return next(err);
+      return res.status(err.status).send({ message: err.message });
     });
 };
 
-const updateUserAvatar = (req, res, next) => {
+const updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   return User.findByIdAndUpdate(
     req.user._id,
@@ -88,7 +90,7 @@ const updateUserAvatar = (req, res, next) => {
           message: err.message,
         });
       }
-      return next(err);
+      return res.status(err.status).send({ message: err.message });
     });
 };
 
