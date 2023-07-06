@@ -1,10 +1,10 @@
 const { ObjectId } = require('mongodb');
 const Card = require('../models/card');
-const { VALIDATION_CODE, NOTFOUNDERROR_CODE } = require('../errors/errors');
+const { VALIDATION_CODE, NOTFOUNDERROR_CODE, InternalServerError } = require('../errors/errors');
 
 const getCards = (req, res) => Card.find({})
   .then((cards) => res.status(200).send(cards))
-  .catch((err) => res.status(err.status).send({ message: err.message }));
+  .catch((err) => res.status(InternalServerError).send({ message: err.message }));
 
 const deleteCard = (req, res) => {
   const _id = req.params.cardId;
@@ -17,13 +17,13 @@ const deleteCard = (req, res) => {
       }
       return Card.deleteOne(card).then(() => res.status(200).send({ message: 'Карточка удалена' }));
     })
-      .catch((err) => res.status(err.status).send({ message: err.message }));
+      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });
 };
 
-const createCard = (req, res, next) => {
+const createCard = (req, res) => {
   const { name, link } = req.body;
   const owner = req.user._id;
   return Card.create({ name, link, owner })
@@ -34,7 +34,7 @@ const createCard = (req, res, next) => {
           message: 'Переданы некорректные данные при создании карточки.',
         });
       }
-      return next(err);
+      return res.status(InternalServerError).send({ message: err.message });
     });
 };
 
@@ -52,7 +52,7 @@ const putLike = (req, res) => {
       }
       return res.status(200).send(card);
     })
-      .catch((err) => res.status(err.status).send({ message: err.message }));
+      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });
@@ -74,7 +74,7 @@ const deleteLike = (req, res) => {
       }
       return res.status(200).send(card);
     })
-      .catch((err) => res.status(err.status).send({ message: err.message }));
+      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id карточки.' });

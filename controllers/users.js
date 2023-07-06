@@ -1,6 +1,6 @@
 const { ObjectId } = require('mongodb');
 const User = require('../models/user');
-const { VALIDATION_CODE, NOTFOUNDERROR_CODE } = require('../errors/errors');
+const { VALIDATION_CODE, NOTFOUNDERROR_CODE, InternalServerError } = require('../errors/errors');
 
 const getUsers = (req, res) => User.find({})
   .then((users) => {
@@ -11,7 +11,7 @@ const getUsers = (req, res) => User.find({})
     }
     return res.status(200).send(users);
   })
-  .catch((err) => res.status(err.status).send({ message: err.message }));
+  .catch((err) => res.status(InternalServerError).send({ message: err.message }));
 
 const getUserById = (req, res) => {
   if (ObjectId.isValid(req.params.userId)) {
@@ -23,7 +23,7 @@ const getUserById = (req, res) => {
       }
       return res.status(200).send(user);
     })
-      .catch((err) => res.status(err.status).send({ message: err.message }));
+      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
   } return res
     .status(VALIDATION_CODE)
     .send({ message: 'Передан некорректный _id пользователя.' });
@@ -39,7 +39,7 @@ const createUser = (req, res) => {
           message: 'Переданы некорректные данные при создании пользователя',
         });
       }
-      return res.status(err.status).send({ message: err.message });
+      return res.status(InternalServerError).send({ message: err.message });
     });
 };
 
@@ -65,7 +65,7 @@ const updateUserData = (req, res) => {
           message: err.message,
         });
       }
-      return res.status(err.status).send({ message: err.message });
+      return res.status(InternalServerError).send({ message: err.message });
     });
 };
 
@@ -90,7 +90,7 @@ const updateUserAvatar = (req, res) => {
           message: err.message,
         });
       }
-      return res.status(err.status).send({ message: err.message });
+      return res.status(InternalServerError).send({ message: err.message });
     });
 };
 
