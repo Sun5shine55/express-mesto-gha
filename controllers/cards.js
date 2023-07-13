@@ -1,26 +1,34 @@
 const { ObjectId } = require('mongodb');
 const Card = require('../models/card');
-const { VALIDATION_CODE, NOTFOUNDERROR_CODE, InternalServerError } = require('../errors/errors');
+const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const ValidationError = require('../errors/ValidationError');
+const InternalServerError = require('../errors/ValidationError');
 
 const getCards = (req, res) => Card.find({})
   .then((cards) => res.status(200).send(cards))
-  .catch((err) => res.status(InternalServerError).send({ message: err.message }));
+  .catch((err) => {
+    throw new InternalServerError({ message: err.message });
+  });
 
 const deleteCard = (req, res) => {
   const _id = req.params.cardId;
   if (ObjectId.isValid(_id)) {
     return Card.findById(_id).then((card) => {
       if (!card) {
-        return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: 'Передан несуществующий _id карточки.' });
+        throw new NotFoundError('Передан несуществующий _id карточки.');
+      }
+      if (!card.owner.equals(req.user._id)) {
+        throw new ForbiddenError('Нет прав на удаление этой карточки');
       }
       return Card.deleteOne(card).then(() => res.status(200).send({ message: 'Карточка удалена' }));
     })
-      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
-  } return res
-    .status(VALIDATION_CODE)
-    .send({ message: 'Передан некорректный _id карточки.' });
+      .catch((err) => {
+        throw new InternalServerError({ message: err.message });
+      });
+  } return () => {
+    throw new ValidationError('Передан некорректный _id карточки');
+  };
 };
 
 const createCard = (req, res) => {
@@ -30,11 +38,11 @@ const createCard = (req, res) => {
     .then((newCard) => res.status(201).send(newCard))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(VALIDATION_CODE).send({
-          message: 'Переданы некорректные данные при создании карточки.',
-        });
+        throw new ValidationError('Переданы некорректные данные при создании карточки');
       }
-      return res.status(InternalServerError).send({ message: err.message });
+      return () => {
+        throw new InternalServerError({ message: err.message });
+      };
     });
 };
 
@@ -46,16 +54,16 @@ const putLike = (req, res) => {
       { new: true },
     ).then((card) => {
       if (!card) {
-        return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: 'Передан несуществующий _id карточки.' });
+        throw new NotFoundError('Передан несуществующий _id карточки.');
       }
       return res.status(200).send(card);
     })
-      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
-  } return res
-    .status(VALIDATION_CODE)
-    .send({ message: 'Передан некорректный _id карточки.' });
+      .catch((err) => {
+        throw new InternalServerError({ message: err.message });
+      });
+  } return () => {
+    throw new ValidationError('Передан некорректный _id карточки');
+  };
 };
 
 const deleteLike = (req, res) => {
@@ -66,18 +74,16 @@ const deleteLike = (req, res) => {
       { new: true },
     ).then((card) => {
       if (!card) {
-        return (
-          res
-            .status(NOTFOUNDERROR_CODE)
-            .send({ message: 'Передан несуществующий _id карточки.' })
-        );
+        throw new NotFoundError('Передан несуществующий _id карточки.');
       }
       return res.status(200).send(card);
     })
-      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
-  } return res
-    .status(VALIDATION_CODE)
-    .send({ message: 'Передан некорректный _id карточки.' });
+      .catch((err) => {
+        throw new InternalServerError({ message: err.message });
+      });
+  } return () => {
+    throw new ValidationError('Передан некорректный _id карточки');
+  };
 };
 
 module.exports = {

@@ -1,45 +1,66 @@
 const { ObjectId } = require('mongodb');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { VALIDATION_CODE, NOTFOUNDERROR_CODE, InternalServerError } = require('../errors/errors');
+const NotFoundError = require('../errors/NotFoundError');
+const ValidationError = require('../errors/ValidationError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const InternalServerError = require('../errors/ValidationError');
 
 const getUsers = (req, res) => User.find({})
   .then((users) => {
     if (!users) {
-      return res
-        .status(NOTFOUNDERROR_CODE)
-        .send({ message: 'Зарегистрированных пользователей нет' });
+      return () => {
+        throw new NotFoundError('Зарегистрированных пользователей нет');
+      };
     }
     return res.status(200).send(users);
   })
-  .catch((err) => res.status(InternalServerError).send({ message: err.message }));
+  .catch((err) => {
+    throw new InternalServerError({ message: err.message });
+  });
 
 const getUserById = (req, res) => {
   if (ObjectId.isValid(req.params.userId)) {
     return User.findOne({ _id: new ObjectId(req.params.userId) }).then((user) => {
       if (!user) {
-        return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден' });
+        return () => {
+          throw new NotFoundError('Пользователь по указанному _id не найден');
+        };
       }
       return res.status(200).send(user);
     })
-      .catch((err) => res.status(InternalServerError).send({ message: err.message }));
-  } return res
-    .status(VALIDATION_CODE)
-    .send({ message: 'Передан некорректный _id пользователя.' });
+      .catch((err) => {
+        throw new InternalServerError({ message: err.message });
+      });
+  } return () => {
+    throw new ValidationError('Передан некорректный _id пользователя');
+  };
 };
 
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  return User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  if (!email || !password) {
+    throw new ValidationError('Не переданы email или пароль');
+  }
+  bcrypt.hash(password, 8)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((newUser) => res.status(201).send(newUser))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(VALIDATION_CODE).send({
-          message: 'Переданы некорректные данные при создании пользователя',
-        });
+        throw new ValidationError(err.message);
       }
-      return res.status(InternalServerError).send({ message: err.message });
+      return () => {
+        throw new InternalServerError({ message: err.message });
+      };
     });
 };
 
@@ -53,19 +74,21 @@ const updateUserData = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден' });
+        return () => {
+          throw new NotFoundError('Пользователь по указанному _id не найден');
+        };
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(VALIDATION_CODE).send({
+        throw new ValidationError({
           message: err.message,
         });
       }
-      return res.status(InternalServerError).send({ message: err.message });
+      return () => {
+        throw new InternalServerError({ message: err.message });
+      };
     });
 };
 
@@ -78,19 +101,46 @@ const updateUserAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOTFOUNDERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден' });
+        return () => {
+          throw new NotFoundError('Пользователь по указанному _id не найден');
+        };
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(VALIDATION_CODE).send({
+        throw new ValidationError({
           message: err.message,
         });
       }
-      return res.status(InternalServerError).send({ message: err.message });
+      return () => {
+        throw new InternalServerError({ message: err.message });
+      };
+    });
+};
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      res.status(200).send({ token: jwt.sign({ _id: user._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
+    })
+    .catch(() => {
+      throw new UnauthorizedError('Ошибка авторизации');
+    });
+};
+
+const getMyData = (req, res) => {
+  const { _id } = req.user._id;
+  User.find({ _id })
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь по указанному _id не найден');
+      }
+      return res.status(200).send(user);
+    })
+    .catch((err) => {
+      throw new InternalServerError({ message: err.message });
     });
 };
 
@@ -100,6 +150,6 @@ module.exports = {
   createUser,
   updateUserData,
   updateUserAvatar,
-  VALIDATION_CODE,
-  NOTFOUNDERROR_CODE,
+  login,
+  getMyData,
 };
