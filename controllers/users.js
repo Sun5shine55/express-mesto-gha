@@ -44,23 +44,33 @@ const createUser = (req, res) => {
   } = req.body;
   if (!email || !password) {
     throw new ValidationError('Не переданы email или пароль');
-  }
-  bcrypt.hash(password, 8)
-    .then((hash) => User.create({
-      name,
-      about,
-      avatar,
-      email,
-      password: hash,
-    }))
-    .then((newUser) => res.status(201).send(newUser))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        throw new ValidationError(err.message);
-      }
-      return () => {
-        throw new InternalServerError({ message: err.message });
-      };
+  } return User.findOne({ email })
+    .then((oldUser) => {
+      if (oldUser) return res.status(409).send({ message: 'Пользователь с таким email уже зарегистрирован' });
+      return bcrypt.hash(password, 8)
+        .then((hash) => User.create({
+          name,
+          about,
+          avatar,
+          email,
+          password: hash,
+        }))
+        .then((user) => res.status(201).send({
+          _id: user._id,
+          email: user.email,
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+          password: user.password,
+        }))
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            throw new ValidationError(err.message);
+          }
+          return () => {
+            throw new InternalServerError({ message: err.message });
+          };
+        });
     });
 };
 
