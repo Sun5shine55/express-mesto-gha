@@ -61,7 +61,6 @@ const createUser = (req, res) => {
           name: user.name,
           about: user.about,
           avatar: user.avatar,
-          password: req.body.password,
         }))
         .catch((err) => {
           if (err.name === 'ValidationError') {
@@ -133,14 +132,15 @@ const login = (req, res) => {
   const { email, password } = req.body;
   User.findOne({ email })
     .then((user) => {
-      if (!user) { throw new UnauthorizedError('Ошибка авторизации'); }
+      if (!user) { return res.status(401).send({ message: 'Пользователь с таким email не зарегистрирован' }); }
       return User.findUserByCredentials(email, password)
         .then((inputUser) => {
           res.status(200).send({ token: jwt.sign({ _id: inputUser._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
         })
-        .catch(() => {
-          throw new UnauthorizedError('Ошибка авторизации');
-        });
+        .catch(() => { throw new UnauthorizedError('Ошибка авторизации'); });
+    })
+    .catch(() => {
+      throw new UnauthorizedError('Ошибка авторизации');
     });
 };
 
