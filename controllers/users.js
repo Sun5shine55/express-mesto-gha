@@ -61,7 +61,7 @@ const createUser = (req, res) => {
           name: user.name,
           about: user.about,
           avatar: user.avatar,
-          password: user.password,
+          password: req.body.password,
         }))
         .catch((err) => {
           if (err.name === 'ValidationError') {
@@ -131,12 +131,16 @@ const updateUserAvatar = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
+  User.findOne({ email })
     .then((user) => {
-      res.status(200).send({ token: jwt.sign({ _id: user._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
-    })
-    .catch(() => {
-      throw new UnauthorizedError('Ошибка авторизации');
+      if (!user) { throw new UnauthorizedError('Ошибка авторизации'); }
+      return User.findUserByCredentials(email, password)
+        .then((inputUser) => {
+          res.status(200).send({ token: jwt.sign({ _id: inputUser._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
+        })
+        .catch(() => {
+          throw new UnauthorizedError('Ошибка авторизации');
+        });
     });
 };
 
