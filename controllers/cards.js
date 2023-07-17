@@ -5,13 +5,11 @@ const ForbiddenError = require('../errors/ForbiddenError');
 const ValidationError = require('../errors/ValidationError');
 const InternalServerError = require('../errors/ValidationError');
 
-const getCards = (req, res) => Card.find({})
+const getCards = (req, res, next) => Card.find({})
   .then((cards) => res.status(200).send(cards))
-  .catch((err) => {
-    throw new InternalServerError({ message: err.message });
-  });
+  .catch(next);
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const _id = req.params.cardId;
   if (ObjectId.isValid(_id)) {
     return Card.findById(_id).then((card) => {
@@ -23,9 +21,7 @@ const deleteCard = (req, res) => {
       }
       return Card.deleteOne(card).then(() => res.status(200).send({ message: 'Карточка удалена' }));
     })
-      .catch((err) => {
-        throw new InternalServerError({ message: err.message });
-      });
+      .catch(next);
   } return () => {
     throw new ValidationError('Передан некорректный _id карточки');
   };
@@ -41,12 +37,12 @@ const createCard = (req, res) => {
         throw new ValidationError('Переданы некорректные данные при создании карточки');
       }
       return () => {
-        throw new InternalServerError({ message: err.message });
+        throw new InternalServerError('Ошибка сервера');
       };
     });
 };
 
-const putLike = (req, res) => {
+const putLike = (req, res, next) => {
   if (ObjectId.isValid(req.params.cardId)) {
     return Card.findByIdAndUpdate(
       req.params.cardId,
@@ -58,15 +54,13 @@ const putLike = (req, res) => {
       }
       return res.status(200).send(card);
     })
-      .catch((err) => {
-        throw new InternalServerError({ message: err.message });
-      });
+      .catch(next);
   } return () => {
     throw new ValidationError('Передан некорректный _id карточки');
   };
 };
 
-const deleteLike = (req, res) => {
+const deleteLike = (req, res, next) => {
   if (ObjectId.isValid(req.params.cardId)) {
     return Card.findByIdAndUpdate(
       req.params.cardId,
@@ -78,9 +72,7 @@ const deleteLike = (req, res) => {
       }
       return res.status(200).send(card);
     })
-      .catch((err) => {
-        throw new InternalServerError({ message: err.message });
-      });
+      .catch(next);
   } return () => {
     throw new ValidationError('Передан некорректный _id карточки');
   };

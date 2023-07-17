@@ -2,12 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
-const { celebrate, Joi } = require('celebrate');
+const { celebrate, errors, Joi } = require('celebrate');
 const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/NotFoundError');
+const InternalServerError = require('./errors/InternalServerError');
 
 const app = express();
 app.disable('x-powered-by');
@@ -46,8 +47,13 @@ app.post(
 app.use('/', auth, userRoutes);
 app.use('/', auth, cardRoutes);
 
+app.use(() => {
+  throw new InternalServerError('Ошибка сервера');
+});
+app.use(errors());
+
 app.all('*', () => {
-  throw new NotFoundError({ message: 'указан неправильный путь' });
+  throw new NotFoundError('указан неправильный путь');
 });
 
 app.listen(PORT, () => {

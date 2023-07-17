@@ -5,9 +5,8 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
-const InternalServerError = require('../errors/ValidationError');
 
-const getUsers = (req, res) => User.find({})
+const getUsers = (req, res, next) => User.find({})
   .then((users) => {
     if (!users) {
       return () => {
@@ -16,11 +15,9 @@ const getUsers = (req, res) => User.find({})
     }
     return res.status(200).send(users);
   })
-  .catch((err) => {
-    throw new InternalServerError({ message: err.message });
-  });
+  .catch(next);
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   if (ObjectId.isValid(req.params.userId)) {
     return User.findOne({ _id: new ObjectId(req.params.userId) }).then((user) => {
       if (!user) {
@@ -30,15 +27,13 @@ const getUserById = (req, res) => {
       }
       return res.status(200).send(user);
     })
-      .catch((err) => {
-        throw new InternalServerError({ message: err.message });
-      });
+      .catch(next);
   } return () => {
     throw new ValidationError('Передан некорректный _id пользователя');
   };
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -62,18 +57,11 @@ const createUser = (req, res) => {
           about: user.about,
           avatar: user.avatar,
         }))
-        .catch((err) => {
-          if (err.name === 'ValidationError') {
-            throw new ValidationError(err.message);
-          }
-          return () => {
-            throw new InternalServerError({ message: err.message });
-          };
-        });
+        .catch(next);
     });
 };
 
-const updateUserData = (req, res) => {
+const updateUserData = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(
@@ -89,19 +77,10 @@ const updateUserData = (req, res) => {
       }
       return res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        throw new ValidationError({
-          message: err.message,
-        });
-      }
-      return () => {
-        throw new InternalServerError({ message: err.message });
-      };
-    });
+    .catch(next);
 };
 
-const updateUserAvatar = (req, res) => {
+const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   return User.findByIdAndUpdate(
     req.user._id,
@@ -116,19 +95,10 @@ const updateUserAvatar = (req, res) => {
       }
       return res.status(200).send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        throw new ValidationError({
-          message: err.message,
-        });
-      }
-      return () => {
-        throw new InternalServerError({ message: err.message });
-      };
-    });
+    .catch(next);
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email })
     .then((user) => {
@@ -139,12 +109,10 @@ const login = (req, res) => {
         })
         .catch(() => { throw new UnauthorizedError('Ошибка авторизации'); });
     })
-    .catch(() => {
-      throw new UnauthorizedError('Ошибка авторизации');
-    });
+    .catch(next);
 };
 
-const getMyData = (req, res) => {
+const getMyData = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
@@ -152,9 +120,7 @@ const getMyData = (req, res) => {
       }
       return res.status(200).send(user);
     })
-    .catch((err) => {
-      throw new InternalServerError({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports = {
