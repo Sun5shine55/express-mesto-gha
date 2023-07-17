@@ -22,15 +22,13 @@ const getUserById = (req, res, next) => {
     return User.findOne({ _id: new ObjectId(req.params.userId) }).then((user) => {
       if (!user) {
         return () => {
-          throw new NotFoundError('Пользователь по указанному _id не найден');
+          throw res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
         };
       }
       return res.status(200).send(user);
     })
       .catch(next);
-  } return () => {
-    throw new ValidationError('Передан некорректный _id пользователя');
-  };
+  } return res.status(404).send({ message: 'Передан некорректный _id пользователя' });
 };
 
 const createUser = (req, res, next) => {

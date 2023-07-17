@@ -7,8 +7,6 @@ const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
-const NotFoundError = require('./errors/NotFoundError');
-const InternalServerError = require('./errors/InternalServerError');
 
 const app = express();
 app.disable('x-powered-by');
@@ -43,17 +41,24 @@ app.post(
   }),
   createUser,
 );
-
+app.use(auth);
 app.use('/', auth, userRoutes);
 app.use('/', auth, cardRoutes);
-
-app.use(() => {
-  throw new InternalServerError('Ошибка сервера');
+app.all('*', (err, res) => {
+  throw res
+    .status(err.statusCode)
+    .send({ message: err.message });
 });
 app.use(errors());
-
-app.all('*', () => {
-  throw new NotFoundError('указан неправильный путь');
+app.use((err, res) => {
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
 });
 
 app.listen(PORT, () => {
