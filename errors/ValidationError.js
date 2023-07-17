@@ -1,6 +1,7 @@
 class ValidationError extends Error {
-  constructor(err) {
-    super(err.message);
+  constructor(message) {
+    const defaultMessage = 'Переданы некорректные данные';
+    super(message || defaultMessage);
     this.statusCode = 400;
   }
 }

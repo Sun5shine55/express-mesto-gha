@@ -1,4 +1,3 @@
-const { ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
@@ -6,29 +5,23 @@ const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 
-const getUsers = (req, res, next) => User.find({})
-  .then((users) => {
-    if (!users) {
-      return () => {
-        throw new NotFoundError('Зарегистрированных пользователей нет');
-      };
-    }
-    return res.status(200).send(users);
-  })
-  .catch(next);
+const getUsers = (req, res, next) => {
+  User.find({})
+    .then((users) => res.status(200).send(users))
+    .catch(next);
+};
+
+const getMyData = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.status(200).send(user))
+    .catch(next);
+};
 
 const getUserById = (req, res, next) => {
-  if (ObjectId.isValid(req.params.userId)) {
-    return User.findOne({ _id: new ObjectId(req.params.userId) }).then((user) => {
-      if (!user) {
-        return () => {
-          throw res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
-        };
-      }
-      return res.status(200).send(user);
-    })
-      .catch(next);
-  } return res.status(404).send({ message: 'Передан некорректный _id пользователя' });
+  User.findById(req.params.userId)
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден'))
+    .then((user) => res.status(200).send(user))
+    .catch(next);
 };
 
 const createUser = (req, res, next) => {
@@ -60,21 +53,14 @@ const createUser = (req, res, next) => {
 };
 
 const updateUserData = (req, res, next) => {
-  const { name, about } = req.body;
+  const newUser = req.body;
 
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    { new: true, runValidators: true },
-  )
-    .then((user) => {
-      if (!user) {
-        return () => {
-          throw new NotFoundError('Пользователь по указанному _id не найден');
-        };
-      }
-      return res.send(user);
-    })
+  User.findByIdAndUpdate(req.user._id, newUser, {
+    new: true,
+    runValidators: true,
+    upsert: false,
+  })
+    .then((user) => res.send(user))
     .catch(next);
 };
 
@@ -106,17 +92,6 @@ const login = (req, res, next) => {
           res.status(200).send({ token: jwt.sign({ _id: inputUser._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
         })
         .catch(() => { throw new UnauthorizedError('Ошибка авторизации'); });
-    })
-    .catch(next);
-};
-
-const getMyData = (req, res, next) => {
-  User.findById(req.user._id)
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь по указанному _id не найден');
-      }
-      return res.status(200).send(user);
     })
     .catch(next);
 };
