@@ -33,7 +33,7 @@ const createUser = (req, res, next) => {
     throw new ValidationError('Не переданы email или пароль');
   } return User.findOne({ email })
     .then((oldUser) => {
-      if (oldUser) throw new ConflictError('Пользователь с таким email уже зарегистрирован');
+      if (oldUser) { throw new ConflictError('Пользователь с таким email уже зарегистрирован'); }
       return bcrypt.hash(password, 8)
         .then((hash) => User.create({
           name,
@@ -50,7 +50,8 @@ const createUser = (req, res, next) => {
           avatar: user.avatar,
         }))
         .catch(next);
-    });
+    })
+    .catch(next);
 };
 
 const updateUserData = (req, res, next) => {
