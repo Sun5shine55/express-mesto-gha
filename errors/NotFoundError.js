@@ -1,6 +1,7 @@
 class NotFoundError extends Error {
   constructor(message) {
-    super(message);
+    const defaultMessage = 'Несуществующий id';
+    super(message || defaultMessage);
     this.statusCode = 404;
   }
 }
