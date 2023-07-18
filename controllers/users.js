@@ -19,7 +19,7 @@ const getMyData = (req, res, next) => {
 
 const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail(new NotFoundError('Пользователь по указанному _id не найден'))
+    .orFail(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }))
     .then((user) => res.status(200).send(user))
     .catch(next);
 };
@@ -54,7 +54,7 @@ const createUser = (req, res, next) => {
 
 const updateUserData = (req, res, next) => {
   const newUser = req.body;
-
+  console.log('ras');
   User.findByIdAndUpdate(req.user._id, newUser, {
     new: true,
     runValidators: true,
