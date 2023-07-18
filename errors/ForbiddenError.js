@@ -1,6 +1,7 @@
 class ForbiddenError extends Error {
   constructor(message) {
-    super(message || 'Нет доступа');
+    const defaultMessage = 'Нет прав на удаление этой карточки';
+    super(message || defaultMessage);
     this.statusCode = 403;
   }
 }

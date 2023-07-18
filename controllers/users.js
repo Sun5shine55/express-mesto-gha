@@ -4,6 +4,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const ConflictError = require('../errors/ConflictError');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -32,7 +33,7 @@ const createUser = (req, res, next) => {
     throw new ValidationError('Не переданы email или пароль');
   } return User.findOne({ email })
     .then((oldUser) => {
-      if (oldUser) return res.status(409).send({ message: 'Пользователь с таким email уже зарегистрирован' });
+      if (oldUser) throw new ConflictError('Пользователь с таким email уже зарегистрирован');
       return bcrypt.hash(password, 8)
         .then((hash) => User.create({
           name,
@@ -54,7 +55,6 @@ const createUser = (req, res, next) => {
 
 const updateUserData = (req, res, next) => {
   const newUser = req.body;
-  console.log('ras');
   User.findByIdAndUpdate(req.user._id, newUser, {
     new: true,
     runValidators: true,
@@ -86,7 +86,7 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email })
     .then((user) => {
-      if (!user) { return res.status(401).send({ message: 'Пользователь с таким email не зарегистрирован' }); }
+      if (!user) { throw new UnauthorizedError('Пользователь с таким email не зарегистрирован'); }
       return User.findUserByCredentials(email, password)
         .then((inputUser) => {
           res.status(200).send({ token: jwt.sign({ _id: inputUser._id }, 'here-there-is-my-key', { expiresIn: '7d' }) });
